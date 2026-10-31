@@ -1,0 +1,256 @@
+// Production schema draft. The running local app uses the SQLite Store adapter.
+// Do not deploy until Prisma repositories, RLS transactions, and pg-boss are wired and tested.
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  name String
+  passwordHash String?
+  totpSecretEnc String?
+  platformRole String?
+  status String @default("active")
+  createdAt DateTime @default(now())
+}
+model Plan {
+  id String @id @default(cuid())
+  name String @unique
+  limits Json
+}
+model Company {
+  id String @id @default(cuid())
+  publicId String @unique
+  name String
+  status String @default("active")
+  planId String
+  limitOverrides Json?
+  timezone String @default("Asia/Dubai")
+  currency String @default("AED")
+  settings Json
+  createdAt DateTime @default(now())
+}
+model Role {
+  id String @id @default(cuid())
+  companyId String
+  name String
+  permissions String[]
+  system Boolean @default(false)
+  ownOnly Boolean @default(false)
+  @@unique([companyId,name])
+  @@index([companyId])
+}
+model Membership {
+  id String @id @default(cuid())
+  companyId String
+  userId String
+  roleId String
+  status String @default("active")
+  lastActiveAt DateTime?
+  @@unique([companyId,userId])
+}
+model BitrixUserLink {
+  id String @id @default(cuid())
+  companyId String
+  membershipId String
+  connectionId String
+  bitrixUserId Int
+  @@unique([connectionId,bitrixUserId])
+  @@unique([membershipId,connectionId])
+  @@index([companyId])
+}
+model Invite {
+  id String @id @default(cuid())
+  companyId String
+  email String
+  roleId String
+  tokenHash String
+  expiresAt DateTime
+  acceptedAt DateTime?
+  @@index([companyId])
+}
+model BitrixConnection {
+  id String @id @default(cuid())
+  companyId String
+  domain String
+  memberId String @unique
+  clientId String
+  clientSecretEnc String
+  accessTokenEnc String?
+  refreshTokenEnc String?
+  applicationTokenEnc String?
+  expiresAt DateTime?
+  scopes String[]
+  planRate Int @default(2)
+  installedByBitrixUserId Int?
+  status String @default("pending")
+  lastHealthAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([companyId])
+}
+model ConnectCode {
+  id String @id @default(cuid())
+  companyId String
+  codeHash String
+  expiresAt DateTime
+  usedAt DateTime?
+  createdByUserId String
+  @@index([companyId])
+}
+model ApiKey {
+  id String @id @default(cuid())
+  companyId String
+  name String
+  prefix String @unique
+  hash String
+  scopes String[]
+  expiresAt DateTime?
+  revokedAt DateTime?
+  lastUsedAt DateTime?
+  lastIp String?
+  createdByUserId String
+  @@index([companyId])
+}
+model AuditEvent {
+  id String @id @default(cuid())
+  companyId String
+  actorUserId String?
+  action String
+  target String?
+  data Json?
+  at DateTime @default(now())
+  @@index([companyId,at])
+}
+model PlatformAudit {
+  id String @id @default(cuid())
+  actorUserId String
+  companyId String?
+  action String
+  data Json?
+  at DateTime @default(now())
+}
+model Impersonation {
+  id String @id @default(cuid())
+  actorUserId String
+  companyId String
+  reason String
+  allowWrite Boolean @default(false)
+  startedAt DateTime @default(now())
+  expiresAt DateTime
+  endedAt DateTime?
+}
+model Segment {
+  id String @id @default(cuid())
+  companyId String
+  connectionId String
+  name String
+  description String?
+  tree Json
+  mode String @default("dynamic")
+  lastCount Int?
+  lastCountedAt DateTime?
+  ownerMembershipId String
+  @@index([companyId])
+}
+model SegmentSnapshot {
+  companyId String
+  segmentId String
+  dealId Int
+  @@id([segmentId,dealId])
+  @@index([companyId])
+}
+model Campaign {
+  id String @id @default(cuid())
+  companyId String
+  connectionId String
+  name String
+  code String
+  channel String
+  segmentId String
+  spaEntityTypeId Int
+  spaCategoryId Int
+  spaStageId String
+  campaignIdField String
+  titleTemplate String
+  fieldMap Json
+  workflows Json
+  allowDuplicates Boolean @default(false)
+  uniqueKeys String[]
+  dupScope String
+  duplicateDays Int @default(30)
+  replyField String?
+  wonStages String[]
+  failedStages String[]
+  revenueField String @default("opportunity")
+  costPerMessage Decimal?
+  schedule Json
+  nextRunAt DateTime?
+  status String @default("draft")
+  ownerMembershipId String
+  createdAt DateTime @default(now())
+  @@unique([companyId,code])
+  @@index([companyId,status])
+}
+model Run {
+  id String @id @default(cuid())
+  companyId String
+  campaignId String
+  occurrenceAt DateTime
+  status String
+  cursor Int @default(0)
+  total Int @default(0)
+  created Int @default(0)
+  skipped Int @default(0)
+  failed Int @default(0)
+  isTest Boolean @default(false)
+  startedAt DateTime?
+  finishedAt DateTime?
+  @@unique([companyId,campaignId,occurrenceAt])
+  @@index([companyId,status])
+}
+model RunTarget {
+  companyId String
+  runId String
+  ordinal Int
+  dealId Int
+  @@id([runId,ordinal])
+  @@index([companyId])
+}
+model RunItem {
+  id String @id @default(cuid())
+  companyId String
+  runId String
+  campaignId String
+  dealId Int
+  spaItemId Int?
+  workflowIds String[]
+  status String
+  error String?
+  attempts Int @default(0)
+  createdAt DateTime @default(now())
+  @@unique([companyId,runId,dealId])
+  @@index([companyId,campaignId])
+}
+model EnrollmentKey {
+  companyId String
+  campaignId String
+  keyHash String
+  dealId Int
+  spaItemId Int
+  spaEntityTypeId Int
+  createdAt DateTime @default(now())
+  @@id([companyId,campaignId,keyHash])
+  @@index([companyId,spaEntityTypeId,keyHash,createdAt])
+}
+model DailyUsage {
+  companyId String
+  campaignId String
+  day DateTime @db.Date
+  created Int @default(0)
+  bitrixCalls Int @default(0)
+  @@id([companyId,campaignId,day])
+}
