@@ -17,8 +17,10 @@ app.use(async (req,res) => {
   try {
     const connectionString = process.env.TM_DATABASE_DATABASE_URL_POOLED ?? process.env.TM_DATABASE_POSTGRES_URL ?? process.env.TM_DATABASE_DATABASE_URL ?? process.env.TM_DATABASE_URL ?? process.env.POSTGRES_URL ?? process.env.DATABASE_URL;
     if (!connectionString?.startsWith('postgres')) throw new Error('Direct PostgreSQL connection is required');
+    const databaseUrl = new URL(connectionString);
+    databaseUrl.searchParams.set('sslmode', 'verify-full');
     const vault = new AuthVault('/tmp/unused-auth-key');
-    pool ??= new Pool({connectionString, max:2, connectionTimeoutMillis:10000, idleTimeoutMillis:10000});
+    pool ??= new Pool({connectionString: databaseUrl.toString(), max:2, connectionTimeoutMillis:10000, idleTimeoutMillis:10000});
     client = await pool.connect();
     const state = await beginState(client, vault);
     const store = hydrate(state);
@@ -48,3 +50,4 @@ app.use(async (req,res) => {
   }
 });
 export default app;
+

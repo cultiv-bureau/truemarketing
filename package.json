@@ -5,7 +5,7 @@
   "description": "Multi-tenant campaign orchestration for Bitrix24",
   "type": "module",
   "engines": {
-    "node": ">=24.0.0"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "npm run build && npm start",
@@ -32,6 +32,9 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
+  "overrides": {
+    "multer": "2.5.0"
+  },
   "devDependencies": {
     "@types/express": "^5.0.0",
     "@types/node": "^24.0.0",
@@ -46,3 +49,4 @@
     "vite": "^6.3.0"
   }
 }
+

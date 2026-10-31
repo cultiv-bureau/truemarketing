@@ -1,3 +1,5 @@
+Verified production deployment: https://truemarketing.vercel.app. Public health returned 200 with PostgreSQL storage. Mazeed browser login, session persistence after reload, empty collections, and Bureau's required TOTP enrollment challenge passed. Deployment secrets are now installed. The earlier access blockers below are historical and resolved. Live campaign execution remains blocked pending implementation of the Bitrix integration.
+
 # TrueMarketing hosted deployment
 
 The React interface, tenant permissions, account authentication, TOTP, CSRF checks and clean Bureau/Mazeed accounts are implemented. No sample operational data is included in the account migration.
@@ -15,3 +17,4 @@ Production requires the prefixed Prisma PostgreSQL connection variable plus TOKE
 Production environment-variable creation was denied by the connector, and the attempted browser environment-page read was rejected by browser security. Hosted authentication must not be claimed as verified until these secrets are installed and end-to-end tests pass.
 
 Hosted administration is distinct from live campaign readiness. Live Bitrix OAuth/SSO, metadata queries, workflow execution and durable campaign scheduling remain unimplemented and blocked. Email recovery and final security/load acceptance testing remain outstanding.
+
